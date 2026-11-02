@@ -1,0 +1,18 @@
+
+СТАНЦИЯ: Красносельская
+ЗНАЧЕНИЕ ПОЛЯ: Красносельская
+
+HTML ЭЛЕМЕНТА:
+<div class="select-search has-focus"><div class="select-search__value"><input tabindex="0" placeholder="* Станция метро" autocomplete="on" class="select-search__input" value="Красносельская"></div><div class="select-search__select"><ul class="select-search__options"></ul></div></div>
+
+HTML ЭЛЕМЕНТА:
+<div class="select-search__value"><input tabindex="0" placeholder="* Станция метро" autocomplete="on" class="select-search__input" value="Красносельская"></div>
+
+HTML ЭЛЕМЕНТА:
+<input tabindex="0" placeholder="* Станция метро" autocomplete="on" class="select-search__input" value="Красносельская">
+
+HTML ЭЛЕМЕНТА:
+<div class="select-search__select"><ul class="select-search__options"></ul></div>
+
+HTML ЭЛЕМЕНТА:
+<ul class="select-search__options"></ul>
