@@ -1,13 +1,14 @@
 
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 from constants import BASE_URL
+from pages.base_page import BasePage
 
 
-class OrderPage:
+class OrderPage(BasePage):
 
     # Первый экран
     NAME_INPUT = (By.XPATH, "//input[@placeholder='* Имя']")
@@ -47,8 +48,7 @@ class OrderPage:
     COOKIE_BANNER = (By.CLASS_NAME, "App_CookieConsent__1yUIN")
 
     def __init__(self, driver):
-        self.driver = driver
-        self.wait = WebDriverWait(driver, 10)
+        super().__init__(driver)
 
     def open(self):
         self.driver.get(BASE_URL)
@@ -62,13 +62,6 @@ class OrderPage:
             if buttons:
                 buttons[0].click()
 
-    def enter_text(self, locator, text):
-        field = self.wait.until(
-            EC.visibility_of_element_located(locator)
-        )
-        field.clear()
-        field.send_keys(text)
-
     def fill_customer_data(self, data):
         self.enter_text(self.NAME_INPUT, data["name"])
         self.enter_text(self.SURNAME_INPUT, data["surname"])
@@ -76,34 +69,28 @@ class OrderPage:
 
         self.close_cookie_banner()
 
-        self.enter_text(self.METRO_INPUT, data["metro"])
+        metro_field = self.wait_for_element(self.METRO_INPUT)
+        metro_field.click()
+        metro_field.clear()
+        metro_field.send_keys(data["metro"])
 
         metro_option = (
             By.XPATH,
-            f"//button[contains(@class, 'select-search__option') "
-            f"and .//div[normalize-space()='{data['metro']}']]"
+            "//button[contains(@class, 'select-search__option') "
+            f"and normalize-space(.)='{data['metro']}']"
         )
 
-        self.wait.until(
+        metro_button = WebDriverWait(self.driver, 20).until(
             EC.visibility_of_element_located(metro_option)
         )
 
-        self.close_cookie_banner()
-
-        self.wait.until(
-            EC.element_to_be_clickable(metro_option)
-        ).click()
+        metro_button.click()
 
         self.enter_text(self.PHONE_INPUT, data["phone"])
-
-        self.wait.until(
-            EC.element_to_be_clickable(self.NEXT_BUTTON)
-        ).click()
+        self.click_element(self.NEXT_BUTTON)
 
     def fill_rental_data(self, data):
-        date_field = self.wait.until(
-            EC.visibility_of_element_located(self.DATE_INPUT)
-        )
+        date_field = self.wait_for_element(self.DATE_INPUT)
 
         date_field.click()
         date_field.send_keys(data["date"])
@@ -115,9 +102,7 @@ class OrderPage:
             )
         )
 
-        dropdown = self.wait.until(
-            EC.element_to_be_clickable(self.RENTAL_DROPDOWN)
-        )
+        dropdown = self.wait_for_clickable(self.RENTAL_DROPDOWN)
 
         self.driver.execute_script(
             "arguments[0].scrollIntoView({block: 'center'});",
@@ -132,36 +117,21 @@ class OrderPage:
             f"and normalize-space()='{data['rental_period']}']"
         )
 
-        self.wait.until(
-            EC.element_to_be_clickable(rental_option)
-        ).click()
+        self.click_element(rental_option)
 
         if data["color"] == "black":
-            self.wait.until(
-                EC.element_to_be_clickable(self.BLACK_COLOR)
-            ).click()
+            self.click_element(self.BLACK_COLOR)
         else:
-            self.wait.until(
-                EC.element_to_be_clickable(self.GREY_COLOR)
-            ).click()
+            self.click_element(self.GREY_COLOR)
 
         self.enter_text(self.COMMENT_INPUT, data["comment"])
 
     def submit_order(self):
-        self.wait.until(
-            EC.element_to_be_clickable(self.ORDER_BUTTON)
-        ).click()
+        self.click_element(self.ORDER_BUTTON)
 
     def confirm_order(self):
-        self.wait.until(
-            EC.visibility_of_element_located(self.CONFIRM_MODAL)
-        )
-
-        self.wait.until(
-            EC.element_to_be_clickable(self.CONFIRM_BUTTON)
-        ).click()
+        self.wait_for_element(self.CONFIRM_MODAL)
+        self.click_element(self.CONFIRM_BUTTON)
 
     def get_success_message(self):
-        return self.wait.until(
-            EC.visibility_of_element_located(self.SUCCESS_MODAL)
-        ).text
+        return self.wait_for_element(self.SUCCESS_MODAL).text

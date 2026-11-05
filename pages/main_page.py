@@ -1,18 +1,19 @@
 
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from constants import BASE_URL
+from pages.base_page import BasePage
 
 
-class MainPage:
+class MainPage(BasePage):
 
     FAQ_BUTTONS = (By.CSS_SELECTOR, ".accordion__button")
 
     ORDER_BUTTONS = (
-        By.CSS_SELECTOR,
-        "button.Button_Button__ra12g:not(.Header_Button__28dPO)"
+        By.XPATH,
+        "//button[contains(@class, 'Button_Button') "
+        "and normalize-space(.)='Заказать']"
     )
 
     SCOOTER_LOGO = (
@@ -26,14 +27,14 @@ class MainPage:
     )
 
     def __init__(self, driver):
-        self.driver = driver
+        super().__init__(driver)
 
     def open(self):
         self.driver.get(BASE_URL)
 
     def click_faq_question(self, index):
-        questions = WebDriverWait(self.driver, 10).until(
-            EC.visibility_of_all_elements_located(self.FAQ_BUTTONS)
+        questions = self.wait.until(
+            EC.presence_of_all_elements_located(self.FAQ_BUTTONS)
         )
 
         question = questions[index]
@@ -43,10 +44,8 @@ class MainPage:
             question
         )
 
-        WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.ID, f"accordion__heading-{index}")
-            )
+        question = self.wait_for_clickable(
+            (By.ID, f"accordion__heading-{index}")
         )
 
         question.click()
@@ -56,9 +55,7 @@ class MainPage:
             f"accordion__panel-{index}"
         )
 
-        WebDriverWait(self.driver, 10).until(
-            EC.visibility_of_element_located(answer_locator)
-        )
+        self.wait_for_element(answer_locator)
 
     def get_faq_answer(self, index):
         answer_locator = (
@@ -66,10 +63,10 @@ class MainPage:
             f"accordion__panel-{index}"
         )
 
-        return self.driver.find_element(*answer_locator).text
+        return self.find_element(answer_locator).text
 
     def click_order_button(self, button_index):
-        buttons = WebDriverWait(self.driver, 10).until(
+        buttons = self.wait.until(
             EC.presence_of_all_elements_located(self.ORDER_BUTTONS)
         )
 
@@ -80,27 +77,21 @@ class MainPage:
             button
         )
 
-        WebDriverWait(self.driver, 10).until(
+        self.wait.until(
             lambda driver: button.is_displayed() and button.is_enabled()
         )
 
         button.click()
 
     def click_scooter_logo(self):
-        logo = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable(self.SCOOTER_LOGO)
-        )
-        logo.click()
+        self.click_element(self.SCOOTER_LOGO)
 
     def click_yandex_logo(self):
         old_handles = self.driver.window_handles
 
-        logo = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable(self.YANDEX_LOGO)
-        )
-        logo.click()
+        self.click_element(self.YANDEX_LOGO)
 
-        WebDriverWait(self.driver, 10).until(
+        self.wait.until(
             EC.new_window_is_opened(old_handles)
         )
 
@@ -112,6 +103,6 @@ class MainPage:
 
         self.driver.switch_to.window(new_handle)
 
-        WebDriverWait(self.driver, 20).until(
+        self.wait.until(
             EC.url_contains("dzen.ru")
         )

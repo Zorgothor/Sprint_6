@@ -1,12 +1,19 @@
+
 import pytest
 from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 
 
 @pytest.fixture
 def driver():
-    driver = webdriver.Firefox()
-    driver.maximize_window()
+    options = Options()
+    options.add_argument("-width=1920")
+    options.add_argument("-height=1080")
 
-    yield driver
+    browser = webdriver.Firefox(options=options)
 
-    driver.quit()
+    browser.maximize_window()
+
+    yield browser
+
+    browser.quit()
