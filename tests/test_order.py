@@ -10,7 +10,9 @@ from constants import ORDER_DATA
 class TestOrder:
 
     @pytest.mark.parametrize("button_index", [0, 1])
-    @allure.title("Проверка перехода к оформлению заказа через кнопку {button_index}")
+    @allure.title(
+        "Проверка перехода к оформлению заказа через кнопку {button_index}"
+    )
     def test_order_button_opens_form(self, driver, button_index):
         main_page = MainPage(driver)
         main_page.open()
@@ -19,9 +21,7 @@ class TestOrder:
 
         order_page = OrderPage(driver)
 
-        assert driver.find_element(
-            *order_page.NAME_INPUT
-        ).is_displayed()
+        assert order_page.is_element_displayed(order_page.NAME_INPUT)
 
     @pytest.mark.parametrize("data", ORDER_DATA)
     @allure.title("Проверка полного оформления заказа")
@@ -32,7 +32,6 @@ class TestOrder:
         main_page.click_order_button(0)
 
         order_page = OrderPage(driver)
-
         order_page.fill_customer_data(data)
         order_page.fill_rental_data(data)
         order_page.submit_order()

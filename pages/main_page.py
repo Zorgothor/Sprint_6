@@ -1,6 +1,7 @@
 
+import allure
+
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
 
 from constants import BASE_URL
 from pages.base_page import BasePage
@@ -26,29 +27,23 @@ class MainPage(BasePage):
         "a.Header_LogoYandex__3TSOI"
     )
 
+    @allure.step("Инициализация главной страницы")
     def __init__(self, driver):
         super().__init__(driver)
 
+    @allure.step("Открыть главную страницу")
     def open(self):
-        self.driver.get(BASE_URL)
+        self.open_url(BASE_URL)
 
+    @allure.step("Открыть вопрос FAQ с индексом {index}")
     def click_faq_question(self, index):
-        questions = self.wait.until(
-            EC.presence_of_all_elements_located(self.FAQ_BUTTONS)
+        question_locator = (
+            By.ID,
+            f"accordion__heading-{index}"
         )
 
-        question = questions[index]
-
-        self.driver.execute_script(
-            "arguments[0].scrollIntoView({block: 'center'});",
-            question
-        )
-
-        question = self.wait_for_clickable(
-            (By.ID, f"accordion__heading-{index}")
-        )
-
-        question.click()
+        self.scroll_to_element(question_locator)
+        self.click_element(question_locator)
 
         answer_locator = (
             By.ID,
@@ -57,52 +52,31 @@ class MainPage(BasePage):
 
         self.wait_for_element(answer_locator)
 
+    @allure.step("Получить ответ FAQ с индексом {index}")
     def get_faq_answer(self, index):
         answer_locator = (
             By.ID,
             f"accordion__panel-{index}"
         )
 
-        return self.find_element(answer_locator).text
+        return self.get_element_text(answer_locator)
 
+    @allure.step("Нажать на кнопку заказа с индексом {button_index}")
     def click_order_button(self, button_index):
-        buttons = self.wait.until(
-            EC.presence_of_all_elements_located(self.ORDER_BUTTONS)
+        self.click_element_by_index(
+            self.ORDER_BUTTONS,
+            button_index
         )
 
-        button = buttons[button_index]
-
-        self.driver.execute_script(
-            "arguments[0].scrollIntoView({block: 'center'});",
-            button
-        )
-
-        self.wait.until(
-            lambda driver: button.is_displayed() and button.is_enabled()
-        )
-
-        button.click()
-
+    @allure.step("Нажать на логотип Самоката")
     def click_scooter_logo(self):
         self.click_element(self.SCOOTER_LOGO)
 
+    @allure.step("Нажать на логотип Яндекса и перейти на новую вкладку")
     def click_yandex_logo(self):
-        old_handles = self.driver.window_handles
+        old_handles = self.get_window_handles()
 
         self.click_element(self.YANDEX_LOGO)
-
-        self.wait.until(
-            EC.new_window_is_opened(old_handles)
-        )
-
-        new_handle = next(
-            handle
-            for handle in self.driver.window_handles
-            if handle not in old_handles
-        )
-
-        self.driver.switch_to.window(new_handle)
-
-        self.wait.until(
-            EC.url_contains("dzen.ru")
-        )
+        self.wait_for_new_window(old_handles)
+        self.switch_to_new_window(old_handles)
+        self.wait_for_url_contains("dzen.ru")

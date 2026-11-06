@@ -1,6 +1,7 @@
 
+import allure
+
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
@@ -47,21 +48,29 @@ class OrderPage(BasePage):
     # Баннер cookie
     COOKIE_BANNER = (By.CLASS_NAME, "App_CookieConsent__1yUIN")
 
+    @allure.step("Инициализация страницы оформления заказа")
     def __init__(self, driver):
         super().__init__(driver)
 
+    @allure.step("Открыть страницу оформления заказа")
     def open(self):
-        self.driver.get(BASE_URL)
+        self.open_url(BASE_URL)
 
+    @allure.step("Закрыть баннер cookie, если он отображается")
     def close_cookie_banner(self):
-        banners = self.driver.find_elements(*self.COOKIE_BANNER)
+        banners = self.find_elements(self.COOKIE_BANNER)
 
-        if banners and banners[0].is_displayed():
-            buttons = banners[0].find_elements(By.TAG_NAME, "button")
+        if banners and self.is_web_element_displayed(banners[0]):
+            buttons = self.find_child_elements(
+                banners[0],
+                By.TAG_NAME,
+                "button"
+            )
 
             if buttons:
-                buttons[0].click()
+                self.click_web_element(buttons[0])
 
+    @allure.step("Заполнить данные заказчика")
     def fill_customer_data(self, data):
         self.enter_text(self.NAME_INPUT, data["name"])
         self.enter_text(self.SURNAME_INPUT, data["surname"])
@@ -69,10 +78,8 @@ class OrderPage(BasePage):
 
         self.close_cookie_banner()
 
-        metro_field = self.wait_for_element(self.METRO_INPUT)
-        metro_field.click()
-        metro_field.clear()
-        metro_field.send_keys(data["metro"])
+        self.click_element(self.METRO_INPUT)
+        self.enter_text(self.METRO_INPUT, data["metro"])
 
         metro_option = (
             By.XPATH,
@@ -80,36 +87,23 @@ class OrderPage(BasePage):
             f"and normalize-space(.)='{data['metro']}']"
         )
 
-        metro_button = WebDriverWait(self.driver, 20).until(
-            EC.visibility_of_element_located(metro_option)
-        )
-
-        metro_button.click()
+        self.click_element(metro_option)
 
         self.enter_text(self.PHONE_INPUT, data["phone"])
         self.click_element(self.NEXT_BUTTON)
 
+    @allure.step("Заполнить данные аренды")
     def fill_rental_data(self, data):
-        date_field = self.wait_for_element(self.DATE_INPUT)
+        self.click_element(self.DATE_INPUT)
+        self.send_keys(self.DATE_INPUT, data["date"])
+        self.send_keys(self.DATE_INPUT, Keys.ESCAPE)
 
-        date_field.click()
-        date_field.send_keys(data["date"])
-        date_field.send_keys(Keys.ESCAPE)
-
-        self.wait.until(
-            EC.invisibility_of_element_located(
-                (By.CLASS_NAME, "react-datepicker")
-            )
+        self.wait_until_invisible(
+            (By.CLASS_NAME, "react-datepicker")
         )
 
-        dropdown = self.wait_for_clickable(self.RENTAL_DROPDOWN)
-
-        self.driver.execute_script(
-            "arguments[0].scrollIntoView({block: 'center'});",
-            dropdown
-        )
-
-        dropdown.click()
+        self.scroll_to_element(self.RENTAL_DROPDOWN)
+        self.click_element(self.RENTAL_DROPDOWN)
 
         rental_option = (
             By.XPATH,
@@ -126,12 +120,15 @@ class OrderPage(BasePage):
 
         self.enter_text(self.COMMENT_INPUT, data["comment"])
 
+    @allure.step("Отправить заказ")
     def submit_order(self):
         self.click_element(self.ORDER_BUTTON)
 
+    @allure.step("Подтвердить оформление заказа")
     def confirm_order(self):
         self.wait_for_element(self.CONFIRM_MODAL)
         self.click_element(self.CONFIRM_BUTTON)
 
+    @allure.step("Получить сообщение об успешном оформлении заказа")
     def get_success_message(self):
-        return self.wait_for_element(self.SUCCESS_MODAL).text
+        return self.get_element_text(self.SUCCESS_MODAL)

@@ -1,4 +1,6 @@
+
 import pytest
+import allure
 
 from pages.main_page import MainPage
 
@@ -52,9 +54,14 @@ class TestFAQ:
             )
         ]
     )
-    def test_faq_answer_opens(self, driver, question_index, expected_answer):
+    @allure.title("Проверка открытия ответа на вопрос FAQ №{question_index}")
+    def test_faq_answer_opens(
+        self,
+        driver,
+        question_index,
+        expected_answer
+    ):
         main_page = MainPage(driver)
-
         main_page.open()
         main_page.click_faq_question(question_index)
 
